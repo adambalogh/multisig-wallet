@@ -5,8 +5,21 @@ import "forge-std/Test.sol";
 
 import "src/Multisig.sol";
 
+contract Counter {
+    uint256 public count;
+
+    constructor() {
+        count = 0;
+    }
+
+    function increment() external {
+        count += 1;
+    }
+}
+
 contract TestMultisig is Test {
     Multisig wallet;
+    Counter counter;
 
     address internal alice;
     address internal bob;
@@ -27,6 +40,9 @@ contract TestMultisig is Test {
         assertEq(wallet.owners(0), alice);
         assertEq(wallet.owners(1), bob);
         assertEq(address(wallet).balance, 1 ether);
+
+        counter = new Counter();
+        assertEq(address(counter).balance, 0 ether);
     }
 
     function testPermissions() public {
@@ -51,7 +67,6 @@ contract TestMultisig is Test {
         vm.expectRevert();
         vm.prank(alice);
         wallet.executeTxn(transactionId);
-
     }
 
     function testTransfer() public {
@@ -71,5 +86,21 @@ contract TestMultisig is Test {
         wallet.executeTxn(transactionId);
         assertEq(bob.balance, 0.1 ether);
         assertEq(address(wallet).balance, 0.9 ether);
+    }
+
+    function testFunctionCall() public {
+        assertEq(counter.count(), 0);
+
+        vm.prank(alice);
+        uint256 transactionId = wallet.submitTxn(address(counter), 0, abi.encodeWithSignature("increment()"));
+        assertEq(counter.count(), 0);
+
+        vm.prank(bob);
+        wallet.approveTxn(transactionId);
+
+        vm.prank(alice);
+        wallet.executeTxn(transactionId);
+        assertEq(address(wallet).balance, 1 ether);
+        assertEq(counter.count(), 1);
     }
 }
