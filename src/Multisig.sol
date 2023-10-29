@@ -3,6 +3,12 @@ pragma solidity ^0.8.13;
 
 contract Multisig {
 
+    event TransactionSubmitted(uint256 id, address dest, uint256 value, address sender);
+    event TransactionApproved(uint256 id, address owner);
+    event TransactionExecuted(uint256 id);
+
+    error FailedToExecute();
+
     struct Transaction {
         uint256 id;
         address destination;
@@ -36,7 +42,7 @@ contract Multisig {
     }
 
     modifier mustBePending(uint256 transactionId) {
-        require(transactionId < transactions.length, "Transaction doesn't exist");
+        require(transactionId < transactions.length, "Transaction not found");
         require(transactions[transactionId].isExecuted == false, "Transaction already executed");
         _;
     }
@@ -53,11 +59,15 @@ contract Multisig {
         ));
         isApproved[transactionId][msg.sender] = true;
 
+        emit TransactionSubmitted(transactionId, destination, value, msg.sender);
+        emit TransactionApproved(transactionId, msg.sender);
+
         return transactionId;
     }
 
     function approveTxn(uint256 transactionId) external onlyOwner() mustBePending(transactionId) {
         isApproved[transactionId][msg.sender] = true;
+        emit TransactionApproved(transactionId, msg.sender);
     }
 
     function executeTxn(uint256 transactionId) external onlyOwner() mustBePending(transactionId) {
@@ -70,8 +80,9 @@ contract Multisig {
                 if (numApprovals >= numVotesRequired) {
                     (bool success, ) = txn.destination.call{value: txn.value, gas: type(uint).max}(txn.data);
                     if (!success) {
-                        revert("Multisig: Failed to execute transaction");
+                        revert FailedToExecute();
                     } else {
+                        emit TransactionExecuted(transactionId);
                         return;
                     }
                 }
