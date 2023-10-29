@@ -3,3 +3,5 @@ runs = 10_000
 
 [profile.default]
   solc = "0.8.19"
+
+gas_reports = ["*"]
