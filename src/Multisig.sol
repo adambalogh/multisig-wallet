@@ -8,6 +8,7 @@ contract Multisig {
     event TransactionExecuted(uint256 id);
 
     error FailedToExecute();
+    error NotEnoughtApprovals();
 
     struct Transaction {
         uint256 id;
@@ -90,7 +91,7 @@ contract Multisig {
             }
         }
 
-        revert("Multisig: Not enough approvals");
+        revert NotEnoughtApprovals();
     }
 
 }
