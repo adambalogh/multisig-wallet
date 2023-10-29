@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.13;
 
-contract Contract {
+contract Multisig {
 
     struct Transaction {
         uint256 id;
@@ -11,14 +11,17 @@ contract Contract {
         bool isExecuted;
     }
 
-    address[] owners;
+    address[] public owners;
     mapping(address => bool) private isOwner;
 
-    Transaction[] public transactions;
     uint immutable public numVotesRequired;
+    Transaction[] public transactions;
     mapping(uint256 => mapping(address => bool)) isApproved;
 
     constructor(address[] memory _owners, uint _numVotesRequired) payable {
+        require(_numVotesRequired >= 1, "At least 1 vote should be required");
+        require(_numVotesRequired <= _owners.length, "Num votes cannot be greater than number of owners");
+
         numVotesRequired = _numVotesRequired;
         owners = _owners;
 
@@ -67,7 +70,7 @@ contract Contract {
                 if (numApprovals >= numVotesRequired) {
                     (bool success, ) = txn.destination.call{value: txn.value, gas: 5000}(txn.data);
                     if (!success) {
-                        revert("Failed to execute transaction");
+                        revert("Multisig: Failed to execute transaction");
                     } else {
                         return;
                     }
@@ -75,7 +78,7 @@ contract Contract {
             }
         }
 
-        revert("Not enough approvals");
+        revert("Multisig: Not enough approvals");
     }
 
 }
