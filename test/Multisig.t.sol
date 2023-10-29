@@ -88,6 +88,25 @@ contract TestMultisig is Test {
         assertEq(address(wallet).balance, 0.9 ether);
     }
 
+    function testCannotExecuteTwice() public {
+        vm.prank(alice);
+        uint256 transactionId = wallet.submitTxn(bob, 0.1 ether, "");
+        assertEq(alice.balance, 0 ether);
+
+        vm.prank(bob);
+        wallet.approveTxn(transactionId);
+
+        vm.prank(alice);
+        wallet.executeTxn(transactionId);
+
+        vm.expectRevert();
+        vm.prank(alice);
+        wallet.executeTxn(transactionId);
+
+        assertEq(bob.balance, 0.1 ether);
+        assertEq(address(wallet).balance, 0.9 ether);
+    }
+
     function testFunctionCall() public {
         assertEq(counter.count(), 0);
 

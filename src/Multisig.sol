@@ -78,6 +78,7 @@ contract Multisig {
                 numApprovals += 1;
 
                 if (numApprovals >= numVotesRequired) {
+                    transactions[transactionId].isExecuted = true;
                     (bool success, ) = txn.destination.call{value: txn.value, gas: type(uint).max}(txn.data);
                     if (!success) {
                         revert FailedToExecute();
