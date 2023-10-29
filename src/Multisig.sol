@@ -68,7 +68,7 @@ contract Multisig {
                 numApprovals += 1;
 
                 if (numApprovals >= numVotesRequired) {
-                    (bool success, ) = txn.destination.call{value: txn.value, gas: 5000}(txn.data);
+                    (bool success, ) = txn.destination.call{value: txn.value, gas: type(uint).max}(txn.data);
                     if (!success) {
                         revert("Multisig: Failed to execute transaction");
                     } else {
