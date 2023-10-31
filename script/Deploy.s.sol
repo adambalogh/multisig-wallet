@@ -18,7 +18,7 @@ contract Deploy is Script {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        new Multisig(owners, 2);
+        new Multisig{value: 0.01 ether}(owners, 2);
 
         vm.stopBroadcast();
     }
