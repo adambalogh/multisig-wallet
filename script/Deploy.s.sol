@@ -6,13 +6,19 @@ import "../src/Multisig.sol";
 
 contract Deploy is Script {
 
-    address[] owners;
+    address[] private owners;
 
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+
+        address deployerAddress = vm.envAddress("ADDRESS");
+        address secondAddress = vm.envAddress("ADDRESS_2");
+
+        owners = [deployerAddress, secondAddress];
+
         vm.startBroadcast(deployerPrivateKey);
 
-        Multisig wallet = new Wallet(owners, 2);
+        new Multisig(owners, 2);
 
         vm.stopBroadcast();
     }
